@@ -4,13 +4,15 @@ library(dplyr)
 library(lubridate)
 
 # Read csvs
-data <- read_csv("actual-cfd-generation-and-avoided-ghg-emissions.csv")
-cpi <- read.csv("series-181023.csv")
-cpi_filtered <- cpi[-c(1:527),]
+data <- read_csv("actual-cfd-generation-and-avoided-ghg-emissions.csv") # low carbon contract comapny 
+cpi <- read.csv("series-181023.csv") # ONS
+cpi_filtered <- cpi[-c(1:473),]
 
 # Filter data for the specific CfD ID
 solar83 <- data[data$CfD_ID == "AAA-LIG-176", ]
-solar83 <-solar83[-1,]
+solar83 <- solar83 %>%
+  filter(!(Settlement_Date == ymd("2016-06-30")) & # Exclude June 30th, 2016
+           !(month(Settlement_Date) == 10 & year(Settlement_Date) == 2023)) # Exclude October 2023
 
 # Ensure CPI values are numeric
 cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100 <- as.numeric(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100)
@@ -34,8 +36,8 @@ if(length(non_matching) > 0) {
 # Match CPI values to the solar83 dataset using Month_Year
 solar83$CPI_for_date <- cpi_lookup[solar83$Month_Year]
 
-# Calculate the adjustment factor using CPI for July 2016 as the base
-base_cpi <- cpi_lookup["2016 JUL"]
+# Calculate the adjustment factor using CPI for 2012
+base_cpi <- mean(as.numeric(cpi[475:485,2]))
 solar83$adjustment_factor <- ifelse(is.na(solar83$CPI_for_date), NA, base_cpi / solar83$CPI_for_date)
 
 # Apply the adjustment factor to the CFD_Payments_GBP column
