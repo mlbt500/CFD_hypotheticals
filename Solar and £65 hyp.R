@@ -37,7 +37,7 @@ if(length(non_matching) > 0) {
 solar83$CPI_for_date <- cpi_lookup[solar83$Month_Year]
 
 # Calculate the adjustment factor using CPI for 2012
-base_cpi <- mean(as.numeric(cpi[475:485,2]))
+base_cpi <- mean(as.numeric(cpi[474:485,2]))
 solar83$adjustment_factor <- ifelse(is.na(solar83$CPI_for_date), NA, base_cpi / solar83$CPI_for_date)
 
 # Apply the adjustment factor to the CFD_Payments_GBP column
@@ -52,8 +52,6 @@ pandemic_start_date <- as.Date("2020-03-01")
 # Assuming "Settlement_Date" is in a datetime format ("<dttm>")
 # Extract the date portion of the column
 solar83$DateOnly <- as.Date(solar83$Settlement_Date)
-
-# Assuming 'pandemic_start_date' and 'solar83a' are already defined
 
 # Filter the data frame based on the date condition
 # Make sure to replace 'DateOnly' with the actual date column name in 'solar83a'
@@ -144,3 +142,27 @@ list(
     solar83a = total_after_solar83a
   )
 )
+
+
+# Create the plot with John Burn-Murdoch styling for solar65a
+plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = Adjusted_CFD_Payments_GBP)) +
+  geom_line(color = "#E3120B", size = 1.2) + # Bold red line for payments
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + # Dotted black zero line
+  labs(title = "£65 strike price (AR1 Solar reference)",
+       x = "Date",
+       y = "Adjusted Payments (GBP)") +
+  theme_minimal(base_size = 14) + # Clean minimalistic theme with larger base font size
+  theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 16), # Smaller bold title
+        axis.title.y = element_text(face = "bold", size = 14), # Bold Y axis title
+        axis.text = element_text(color = "black"), # Black axis text for clarity
+        axis.line = element_line(color = "black"), # Black axis lines
+        panel.grid.major = element_line(color = "grey80"), # Lighter grid lines
+        panel.grid.minor = element_blank(), # No minor grid lines
+        panel.background = element_rect(fill = "white", color = NA), # White background, no border
+        plot.margin = margin(5.5, 5.5, 5.5, 5.5, "pt")) + # Adjust plot margins
+  annotate("text", x = max(solar65a$Settlement_Date, na.rm = TRUE), y = min(solar65a$Adjusted_CFD_Payments_GBP, na.rm = TRUE), 
+           label = "Source: LCCC / Adjusted to 2012 CPI", 
+           hjust = 1, vjust = -1, color = "grey50", size = 3.5) # Source annotation at the bottom right
+
+# Display the plot
+print(plot_solar65a)

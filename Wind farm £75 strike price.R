@@ -3,15 +3,18 @@
 library(readr)
 library(dplyr)
 library(lubridate)
+library(ggplot2)
 
 # Read csvs
 data <- read_csv("actual-cfd-generation-and-avoided-ghg-emissions.csv") # low carbon contract company 
 cpi <- read.csv("series-181023.csv") # ONS
-cpi_filtered <- cpi[-c(1:527),] # Skipping the first 527 rows which might be headers or unrelated data
+cpi_filtered <- cpi[-c(1:473),]
 
 # Filter data for the specific CfD ID
 triton_knoll <- data[data$CfD_ID == "AR2-TKN-103", ]
-triton_knoll <- triton_knoll[-1,] # Assuming the first row is headers or unrelated
+triton_knoll <- triton_knoll %>%
+  filter(!(month(Settlement_Date) == 5 & year(Settlement_Date) == 2021),
+         !(month(Settlement_Date) == 10 & year(Settlement_Date) == 2023)) # Exclude October 2023
 
 # Ensure CPI values are numeric
 cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100 <- as.numeric(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100)
@@ -35,8 +38,8 @@ if(length(non_matching) > 0) {
 # Match CPI values to the triton_knoll dataset using Month_Year
 triton_knoll$CPI_for_date <- cpi_lookup[triton_knoll$Month_Year]
 
-# Calculate the adjustment factor using CPI for July 2016 as the base
-base_cpi <- cpi_lookup["2016 JUL"]
+# Calculate the adjustment factor using CPI for 2012
+base_cpi <- mean(as.numeric(cpi[474:485,2]))
 triton_knoll$adjustment_factor <- ifelse(is.na(triton_knoll$CPI_for_date), NA, base_cpi / triton_knoll$CPI_for_date)
 
 # Apply the adjustment factor to the CFD_Payments_GBP column
@@ -50,9 +53,6 @@ pandemic_start_date <- as.Date("2020-03-01")
 # Assuming "Settlement_Date" is in a datetime format ("<dttm>")
 # Extract the date portion of the column
 triton_knoll$DateOnly <- as.Date(triton_knoll$Settlement_Date)
-
-# Filter the data frame based on the date condition
-pre_pandemic_data <- filter(triton_knoll, DateOnly < pandemic_start_date)
 
 # Define the annual discount rate
 annual_discount_rate <- 0.035
@@ -79,3 +79,27 @@ sum_pv_triton_knoll <- sum(triton_knoll$PV_CFD_Payments_GBP, na.rm = TRUE)
 
 # Output the results
 sum_pv_triton_knoll
+
+# Ensure the DateOnly column is of Date class
+triton_knoll$DateOnly <- as.Date(triton_knoll$DateOnly)
+
+# Create the plot with John Burn-Murdoch styling and a smaller title
+plot <- ggplot(triton_knoll, aes(x = DateOnly, y = Adjusted_CFD_Payments_GBP)) +
+  geom_line(color = "#E3120B", size = 1.2) + # Bold red line for payments
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + # Dotted black zero line
+  labs(title = "Triton Knoll £75 Strike Price",
+       x = "Date",
+       y = "Adjusted Payments (GBP)") +
+  theme_minimal(base_size = 14) + # Clean minimalistic theme with larger base font size
+  theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 18), # Smaller bold title
+        axis.title.y = element_text(face = "bold", size = 14), # Bold Y axis title
+        axis.text = element_text(color = "black"), # Black axis text for clarity
+        axis.line = element_line(color = "black"), # Black axis lines
+        panel.grid.major = element_line(color = "grey80"), # Lighter grid lines
+        panel.grid.minor = element_blank(), # No minor grid lines
+        panel.background = element_rect(fill = "white", color = NA), # White background, no border
+        plot.margin = margin(5.5, 5.5, 5.5, 5.5, "pt")) + # Adjust plot margins
+  annotate("text", x = max(triton_knoll$DateOnly, na.rm = TRUE), y = min(triton_knoll$Adjusted_CFD_Payments_GBP, na.rm = TRUE), 
+           label = "Source: LCCC / Adjusted to 2012 CPI", 
+           hjust = 1, vjust = -1, color = "grey50", size = 3.5) # Source annotation at the bottom right
+plot
