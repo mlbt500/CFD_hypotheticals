@@ -12,7 +12,7 @@ cpi_filtered <- cpi[-c(1:527),]
 solar83 <- data[data$CfD_ID == "AAA-LIG-176", ]
 solar83 <-solar83[-1,]
 
-# Ensure CPI values are numeric if they aren't already
+# Ensure CPI values are numeric
 cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100 <- as.numeric(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100)
 
 # Create a lookup vector for CPI values with the Title as names
@@ -20,6 +20,7 @@ cpi_lookup <- setNames(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100, cpi_filter
 
 # Format the Settlement_Date column to match the CPI Title format
 solar83$Month_Year <- format(solar83$Settlement_Date, "%Y %b")
+solar83$Month_Year <- toupper(solar83$Month_Year)
 
 # Check for any Month_Year in solar83 that doesn't have a match in cpi_lookup
 non_matching <- setdiff(solar83$Month_Year, names(cpi_lookup))
