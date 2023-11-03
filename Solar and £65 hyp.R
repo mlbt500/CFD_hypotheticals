@@ -3,11 +3,11 @@ library(readr)
 library(dplyr)
 library(lubridate)
 
-# Fetch data from the URL
-url <- "https://www.lowcarboncontracts.uk/data-portal/dataset/8a82caf8-3ec2-45a2-b1bd-581411d61cde/resource/ab7ea978-2f03-4ee4-99ef-f9cdf398b849/download/actual-cfd-generation-and-avoided-ghg-emissions.csv"
-data <- read_csv(url)
+# Read csvs
+data <- read_csv("actual-cfd-generation-and-avoided-ghg-emissions.csv")
 cpi <- read.csv("series-181023.csv")
 cpi_filtered <- cpi[-c(1:527),]
+
 # Filter data for the specific CfD ID
 solar83 <- data[data$CfD_ID == "AAA-LIG-176", ]
 solar83 <-solar83[-1,]
