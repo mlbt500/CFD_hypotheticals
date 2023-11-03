@@ -58,7 +58,7 @@ solar83$DateOnly <- as.Date(solar83$Settlement_Date)
 pre_pandemic_data <- filter(solar83a, Settlement_Date < pandemic_start_date)
 
 # Divide through by 2012 strike price
-names <- c("CFD_Payments_GBP", "Strike_Price_GBP_Per_MWh", "Market_Reference_Price_GBP_Per_MWh")
+names <- c("Adjusted_CFD_Payments_GBP", "Strike_Price_GBP_Per_MWh", "Market_Reference_Price_GBP_Per_MWh")
 solar2a <- solar83a
 for(name in names){
   solar2a[[name]] <- solar83a[[name]] / 79.23
@@ -76,73 +76,30 @@ for(name in names){
   solar75a[[name]] <- solar2a[[name]] * 75
 }
 
-# Define the discount rate
-annual_discount_rate <- 0.035
+# Define the treasury discount rate
+treasury_rate <- 0.035
 
-# Define the base date for discounting (July 2016)
-base_date <- as.Date("2016-07-01")
+# Define the last payment date
+last_payment_date <- as.Date("2023-09-30")
 
-# Function to calculate the present value of a payment
-calculate_pv <- function(payment, date, base_date, rate) {
-  # Calculate the time in years between the payment date and the base date
-  time_in_years <- as.numeric(difftime(date, base_date, units = "days")) / 365.25
-  
-  # Calculate the present value
-  pv <- payment / ((1 + rate) ** time_in_years)
-  
-  return(pv)
-}
+# Calculate the NPV
+npv <- solar65a %>%
+  mutate(
+    # Calculate the number of days from the Settlement_Date to the last payment date
+    Days = as.numeric(difftime(last_payment_date, Settlement_Date, units = "days")),
+    # Convert days to years for the discount rate calculation
+    Years = Days / 365.25,
+    # Discount all payments up to the date of the last payment
+    # Payments on and after the last payment date are not discounted
+    Discounted_Payment = if_else(Settlement_Date >= last_payment_date, 
+                                 Adjusted_CFD_Payments_GBP, 
+                                 Adjusted_CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
+  ) %>%
+  # Sum up all the discounted payments to get the NPV
+  summarise(NPV = sum(Discounted_Payment, na.rm = TRUE)) # Use na.rm = TRUE to remove NAs
 
-# Sum of discounted payments for each data frame
-sum_pv_solar65a <- sum(sapply(1:nrow(solar65a), function(i) calculate_pv(solar65a$CFD_Payments_GBP[i], solar65a$Settlement_Date[i], base_date, annual_discount_rate)))
-sum_pv_solar75a <- sum(sapply(1:nrow(solar75a), function(i) calculate_pv(solar75a$CFD_Payments_GBP[i], solar75a$Settlement_Date[i], base_date, annual_discount_rate)))
-sum_pv_solar83a <- sum(sapply(1:nrow(solar83a), function(i) calculate_pv(solar83a$CFD_Payments_GBP[i], solar83a$Settlement_Date[i], base_date, annual_discount_rate)))
-
-# Output the results
-sum_pv_solar65a
-sum_pv_solar75a
-sum_pv_solar83a
-
-# Function to calculate the total discounted payment for a given period
-calculate_discounted_total <- function(data_frame, start_date, end_date, discount_rate, base_date) {
-  # Filter the data for the given period
-  period_data <- subset(data_frame, Settlement_Date >= start_date & Settlement_Date < end_date)
-  
-  # Calculate the present value of each payment
-  pv_payments <- sapply(1:nrow(period_data), function(i) {
-    calculate_pv(period_data$CFD_Payments_GBP[i], period_data$Settlement_Date[i], base_date, discount_rate)
-  })
-  
-  # Sum the present values
-  total_discounted_payment <- sum(pv_payments, na.rm = TRUE)
-  
-  return(total_discounted_payment)
-}
-
-# Calculate the total discounted payments before and after the pandemic for each strike rate
-total_before_solar65a <- calculate_discounted_total(solar65a, base_date, pandemic_start_date, annual_discount_rate, base_date)
-total_after_solar65a <- calculate_discounted_total(solar65a, pandemic_start_date, Sys.Date(), annual_discount_rate, base_date)
-
-total_before_solar75a <- calculate_discounted_total(solar75a, base_date, pandemic_start_date, annual_discount_rate, base_date)
-total_after_solar75a <- calculate_discounted_total(solar75a, pandemic_start_date, Sys.Date(), annual_discount_rate, base_date)
-
-total_before_solar83a <- calculate_discounted_total(solar83a, base_date, pandemic_start_date, annual_discount_rate, base_date)
-total_after_solar83a <- calculate_discounted_total(solar83a, pandemic_start_date, Sys.Date(), annual_discount_rate, base_date)
-
-# Output the results
-list(
-  before_pandemic = list(
-    solar65a = total_before_solar65a,
-    solar75a = total_before_solar75a,
-    solar83a = total_before_solar83a
-  ),
-  after_pandemic = list(
-    solar65a = total_after_solar65a,
-    solar75a = total_after_solar75a,
-    solar83a = total_after_solar83a
-  )
-)
-
+# Output the NPV
+print(npv)
 
 # Create the plot with John Burn-Murdoch styling for solar65a
 plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = Adjusted_CFD_Payments_GBP)) +

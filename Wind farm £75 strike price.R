@@ -45,43 +45,28 @@ triton_knoll$adjustment_factor <- ifelse(is.na(triton_knoll$CPI_for_date), NA, b
 # Apply the adjustment factor to the CFD_Payments_GBP column
 triton_knoll$Adjusted_CFD_Payments_GBP <- ifelse(is.na(triton_knoll$adjustment_factor), NA, triton_knoll$CFD_Payments_GBP * triton_knoll$adjustment_factor)
 
-# Assuming the rest of the code is intended for further analysis and adjustments
+# Define the treasury discount rate
+treasury_rate <- 0.035
 
-# Define the pandemic start date
-pandemic_start_date <- as.Date("2020-03-01")
+# Define the last payment date
+last_payment_date <- as.Date("2023-09-30")
 
-# Assuming "Settlement_Date" is in a datetime format ("<dttm>")
-# Extract the date portion of the column
-triton_knoll$DateOnly <- as.Date(triton_knoll$Settlement_Date)
+# Calculate the NPV
+triton_knoll <- triton_knoll %>%
+  mutate(
+    # Calculate the number of days from the Settlement_Date to the last payment date
+    Days = as.numeric(difftime(last_payment_date, DateOnly, units = "days")),
+    # Convert days to years for the discount rate calculation
+    Years = Days / 365.25,
+    # Discount all payments up to the date of the last payment
+    # Payments on the last payment date are not discounted
+    Discounted_Payment = if_else(DateOnly == last_payment_date, Adjusted_CFD_Payments_GBP, Adjusted_CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
+  ) %>%
+  # Sum up all the discounted payments to get the NPV
+  summarise(NPV = sum(Discounted_Payment, na.rm = TRUE)) # Use na.rm = TRUE to remove NA values from the sum
 
-# Define the annual discount rate
-annual_discount_rate <- 0.035
-
-# Define the base date for discounting (first payment date)
-base_date <- min(triton_knoll$Settlement_Date)
-
-# Function to calculate the present value of a payment
-calculate_pv <- function(payment, date, base_date, rate) {
-  # Calculate the time in years between the payment date and the base date
-  time_in_years <- as.numeric(difftime(date, base_date, units = "days")) / 365.25
-  
-  # Calculate the present value
-  pv <- payment / ((1 + rate) ** time_in_years)
-  
-  return(pv)
-}
-
-# Apply the calculate_pv function to each payment to find its present value
-triton_knoll$PV_CFD_Payments_GBP <- mapply(calculate_pv, triton_knoll$Adjusted_CFD_Payments_GBP, triton_knoll$Settlement_Date, MoreArgs = list(base_date = base_date, rate = annual_discount_rate))
-
-# Sum of discounted payments
-sum_pv_triton_knoll <- sum(triton_knoll$PV_CFD_Payments_GBP, na.rm = TRUE)
-
-# Output the results
-sum_pv_triton_knoll
-
-# Ensure the DateOnly column is of Date class
-triton_knoll$DateOnly <- as.Date(triton_knoll$DateOnly)
+# Output the NPV
+print(triton_knoll$NPV)
 
 # Create the plot with John Burn-Murdoch styling and a smaller title
 plot <- ggplot(triton_knoll, aes(x = DateOnly, y = Adjusted_CFD_Payments_GBP)) +
