@@ -51,24 +51,8 @@ treasury_rate <- 0.035
 # Define the last payment date
 last_payment_date <- as.Date("2023-09-30")
 
-# Calculate the NPV
-npv <- triton_knoll %>%
-  mutate(
-    # Calculate the number of days from the Settlement_Date to the last payment date
-    Days = as.numeric(difftime(last_payment_date, Settlement_Date, units = "days")),
-    # Convert days to years for the discount rate calculation
-    Years = Days / 365.25,
-    # Discount all payments up to the date of the last payment
-    # Payments on and after the last payment date are not discounted
-    Discounted_Payment = if_else(Settlement_Date >= last_payment_date, 
-                                 Adjusted_CFD_Payments_GBP, 
-                                 Adjusted_CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
-  ) %>%
-  # Sum up all the discounted payments to get the NPV
-  summarise(NPV = sum(Discounted_Payment, na.rm = TRUE)) # Use na.rm = TRUE to remove NAs
-
-# Output the NPV
-print(npv)
+# LCCC payments
+sum(triton_knoll$CFD_Payments_GBP)
 
 # Create the DateOnly column
 triton_knoll$DateOnly <- as.Date(triton_knoll$Settlement_Date)
