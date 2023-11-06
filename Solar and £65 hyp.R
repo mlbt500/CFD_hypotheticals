@@ -59,7 +59,7 @@ solar83$DateOnly <- as.Date(solar83$Settlement_Date)
 pre_pandemic_data <- filter(solar83a, Settlement_Date < pandemic_start_date)
 
 # Divide through by 2012 strike price
-names <- c("Strike_Price_GBP_Per_MWh", "Market_Reference_Price_GBP_Per_MWh")
+names <- c("Strike_Price_GBP_Per_MWh")
 solar2a <- solar83a
 for(name in names){
   solar2a[[name]] <- solar83a[[name]] / 79.23
