@@ -51,12 +51,6 @@ treasury_rate <- 0.035
 # Define the last payment date
 last_payment_date <- as.Date("2023-09-30")
 
-# Define the treasury discount rate
-treasury_rate <- 0.035
-
-# Define the last payment date
-last_payment_date <- as.Date("2023-09-30")
-
 # Calculate the NPV
 npv <- triton_knoll %>%
   mutate(

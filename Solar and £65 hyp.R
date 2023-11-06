@@ -41,8 +41,9 @@ solar83$CPI_for_date <- cpi_lookup[solar83$Month_Year]
 base_cpi <- mean(as.numeric(cpi[474:485,2]))
 solar83$adjustment_factor <- ifelse(is.na(solar83$CPI_for_date), NA, base_cpi / solar83$CPI_for_date)
 
-# Apply the adjustment factor to the CFD_Payments_GBP column
-solar83$Adjusted_CFD_Payments_GBP <- ifelse(is.na(solar83$adjustment_factor), NA, solar83$CFD_Payments_GBP * solar83$adjustment_factor)
+# Apply the adjustment factor to the Strike Price and Reference Price
+solar83$Strike_Price_GBP_Per_MWh <- ifelse(is.na(solar83$adjustment_factor), NA, solar83$Strike_Price_GBP_Per_MWh * solar83$adjustment_factor)
+solar83$Market_Reference_Price_GBP_Per_MWh <- ifelse(is.na(solar83$adjustment_factor), NA, solar83$Market_Reference_Price_GBP_Per_MWh * solar83$adjustment_factor)
 
 # Create the new tibble solar83a with the adjusted payments
 solar83a <- solar83
