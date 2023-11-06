@@ -47,16 +47,9 @@ solar83$Adjusted_CFD_Payments_GBP <- ifelse(is.na(solar83$adjustment_factor), NA
 # Create the new tibble solar83a with the adjusted payments
 solar83a <- solar83
 
-# Define the pandemic start date
-pandemic_start_date <- as.Date("2020-03-01")
-
 # Assuming "Settlement_Date" is in a datetime format ("<dttm>")
 # Extract the date portion of the column
 solar83$DateOnly <- as.Date(solar83$Settlement_Date)
-
-# Filter the data frame based on the date condition
-# Make sure to replace 'DateOnly' with the actual date column name in 'solar83a'
-pre_pandemic_data <- filter(solar83a, Settlement_Date < pandemic_start_date)
 
 # Divide through by 2012 strike price
 names <- c("Strike_Price_GBP_Per_MWh")
@@ -73,15 +66,7 @@ for(name in names){
 
 # Calculate the difference between the strike price (65 in this case) and the market reference price
 # Then multiply by the power generated to get the new payment amounts
-solar65a$CFD_Payments_GBP <- (65 - solar65a$Market_Reference_Price_GBP_Per_MWh) * solar65a$CFD_Generation_MWh
-
-# solar with a strike price of 75
-solar75a <- solar2a
-for(name in names){
-  solar75a[[name]] <- solar2a[[name]] * 75
-}
-
-solar75a$CFD_Payments_GBP <- (65 - solar75a$Market_Reference_Price_GBP_Per_MWh) * solar75a$CFD_Generation_MWh
+solar65a$CFD_Payments_GBP <- (solar65a$Strike_Price_GBP_Per_MWh - solar65a$Market_Reference_Price_GBP_Per_MWh) * solar65a$CFD_Generation_MWh
 
 # Define the treasury discount rate
 treasury_rate <- 0.035
@@ -99,8 +84,8 @@ npv <- solar65a %>%
     # Discount all payments up to the date of the last payment
     # Payments on and after the last payment date are not discounted
     Discounted_Payment = if_else(Settlement_Date >= last_payment_date, 
-                                 Adjusted_CFD_Payments_GBP, 
-                                 Adjusted_CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
+                                 CFD_Payments_GBP, 
+                                 CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
   ) %>%
   # Sum up all the discounted payments to get the NPV
   summarise(NPV = sum(Discounted_Payment, na.rm = TRUE)) # Use na.rm = TRUE to remove NAs
@@ -109,7 +94,7 @@ npv <- solar65a %>%
 print(npv)
 
 # Create the plot with John Burn-Murdoch styling for solar65a
-plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = Adjusted_CFD_Payments_GBP)) +
+plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = CFD_Payments_GBP)) +
   geom_line(color = "#E3120B", size = 1.2) + # Bold red line for payments
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + # Dotted black zero line
   labs(title = "£65 strike price (AR1 Solar reference)",
