@@ -2,6 +2,7 @@
 library(readr)
 library(dplyr)
 library(lubridate)
+library(ggplot2)
 
 # Read csvs
 data <- read_csv("actual-cfd-generation-and-avoided-ghg-emissions.csv") # low carbon contract comapny 
@@ -58,7 +59,7 @@ solar83$DateOnly <- as.Date(solar83$Settlement_Date)
 pre_pandemic_data <- filter(solar83a, Settlement_Date < pandemic_start_date)
 
 # Divide through by 2012 strike price
-names <- c("Adjusted_CFD_Payments_GBP", "Strike_Price_GBP_Per_MWh", "Market_Reference_Price_GBP_Per_MWh")
+names <- c("Strike_Price_GBP_Per_MWh", "Market_Reference_Price_GBP_Per_MWh")
 solar2a <- solar83a
 for(name in names){
   solar2a[[name]] <- solar83a[[name]] / 79.23
@@ -70,11 +71,17 @@ for(name in names){
   solar65a[[name]] <- solar2a[[name]] * 65
 }
 
+# Calculate the difference between the strike price (65 in this case) and the market reference price
+# Then multiply by the power generated to get the new payment amounts
+solar65a$CFD_Payments_GBP <- (65 - solar65a$Market_Reference_Price_GBP_Per_MWh) * solar65a$CFD_Generation_MWh
+
 # solar with a strike price of 75
 solar75a <- solar2a
 for(name in names){
   solar75a[[name]] <- solar2a[[name]] * 75
 }
+
+solar75a$CFD_Payments_GBP <- (65 - solar75a$Market_Reference_Price_GBP_Per_MWh) * solar75a$CFD_Generation_MWh
 
 # Define the treasury discount rate
 treasury_rate <- 0.035
