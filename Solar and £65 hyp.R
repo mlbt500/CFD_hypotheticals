@@ -78,7 +78,7 @@ pre_pandemic_cutoff <- as.Date("2020-01-01")
 # Filter the dataset for the pre-pandemic period
 solar_pre_pandemic <- solar65a %>%
   filter(Settlement_Date < pre_pandemic_cutoff)
-pre_pandemic <- sum(pre_pandemic$CFD_Payments_GBP)
+pre_pandemic <- sum(solar_pre_pandemic$CFD_Payments_GBP)
 
 #Payments from the low-carbon contract company
 results <- data.frame("total" = total, "pre pandemic" = pre_pandemic)
@@ -103,21 +103,3 @@ plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = CFD_Payments_GBP)
   annotate("text", x = max(solar65a$Settlement_Date, na.rm = TRUE), y = min(solar65a$Adjusted_CFD_Payments_GBP, na.rm = TRUE), 
            label = "Source: LCCC / Adjusted to 2012 CPI", 
            hjust = 1, vjust = -1, color = "grey50", size = 3.5) # Source annotation at the bottom right
-
-# Display the plot
-print(plot_solar65a)
-
-# Define the cutoff date for the pre-pandemic period
-pre_pandemic_cutoff <- as.Date("2020-01-01")
-
-# Calculate the NPV only for the period before the pandemic
-npv_pre_pandemic <- solar65a %>%
-  filter(Settlement_Date < pre_pandemic_cutoff) %>%
-  mutate(
-    Days = as.numeric(difftime(last_payment_date, Settlement_Date, units = "days")),
-    Years = Days / 365.25,
-    Discounted_Payment = if_else(Settlement_Date >= last_payment_date, 
-                                 CFD_Payments_GBP, 
-                                 CFD_Payments_GBP / ((1 + treasury_rate) ^ Years))
-  ) %>%
-  summarise(NPV = sum(Discounted_Payment, na.rm = TRUE))
