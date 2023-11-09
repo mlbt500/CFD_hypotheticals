@@ -103,3 +103,4 @@ plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = CFD_Payments_GBP)
   annotate("text", x = max(solar65a$Settlement_Date, na.rm = TRUE), y = min(solar65a$Adjusted_CFD_Payments_GBP, na.rm = TRUE), 
            label = "Source: LCCC / Adjusted to 2012 CPI", 
            hjust = 1, vjust = -1, color = "grey50", size = 3.5) # Source annotation at the bottom right
+plot_solar65a`
