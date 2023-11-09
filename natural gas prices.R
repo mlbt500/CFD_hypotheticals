@@ -1,6 +1,6 @@
 natural_gas <- read.csv("historical-prices-11-08-2023.csv")
 natural_gas
-
+# https://www.barchart.com/futures/quotes/NFF02/interactive-chart
 library(ggplot2)
 
 # Assuming your data frame 'natural_gas' is already created and has the correct format
