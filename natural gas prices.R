@@ -1,11 +1,37 @@
+library(ggplot2)
+library(lubridate)
+
 natural_gas <- read.csv("historical-prices-11-08-2023.csv")
 natural_gas
 # https://www.barchart.com/futures/quotes/NFF02/interactive-chart
-library(ggplot2)
 
 # Assuming your data frame 'natural_gas' is already created and has the correct format
 # Convert the 'Exp.Date' column to Date format assuming the dates are in 'dd/mm/yyyy' format
 natural_gas$Exp.Date <- as.Date(natural_gas$Exp.Date, format = "%d/%m/%Y")
+
+#cpi https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23
+cpi <- read.csv("cpi.csv")
+#remove rows that are not in month format
+cpi_filtered <- cpi[-c(1:185),]
+# Ensure CPI values are numeric
+cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100 <- as.numeric(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100)
+
+# Create a lookup vector for CPI values with the Title as names
+cpi_lookup <- setNames(cpi_filtered$CPI.INDEX.00..ALL.ITEMS.2015.100, cpi_filtered$Title)
+
+# Format 'Exp.Date' to "Year Mon" format and convert to uppercase
+natural_gas$Year_Mon <- toupper(format(natural_gas$Exp.Date, "%Y %b"))
+
+# Check for any Month_Year that doesn't have a match in cpi_lookup
+non_matching <- setdiff(natural_gas$Month_Year, names(cpi_lookup))
+
+# Match CPI values to the triton_knoll dataset using Month_Year
+natural_gas$CPI_for_date <- cpi_lookup[natural_gas$Year_Mon]
+
+#Adjustment factor
+natural_gas <- natural_gas[1:321,]
+natural_gas$adjustment_factor <- ifelse(is.na(natural_gas$CPI_for_date), NA, natural_gas[321,12] / natural_gas$CPI_for_date)
+natural_gas$Last_inflation_adjusted <- natural_gas$Last * natural_gas$adjustment_factor
 
 # Create the plot with matched styling
 plot <- ggplot(natural_gas, aes(x = Exp.Date, y = Last)) +
