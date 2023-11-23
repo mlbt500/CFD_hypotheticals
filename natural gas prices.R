@@ -64,7 +64,7 @@ plot <- ggplot(natural_gas, aes(x = Exp.Date, y = Last_inflation_adjusted)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + 
   labs(title = "UK Natural Gas Future Prices Over Time",
        x = "Expiration Date",
-       y = "Price (GBP/thm adjusted by CPI)") +
+       y = "Price (GBP/thm)") +
   theme_minimal(base_size = 10) +
   theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 20), # Title with bold and size 16
         axis.title.x = element_text(face = "bold", size = 20), # X axis title with bold and size 12
@@ -78,7 +78,7 @@ plot <- ggplot(natural_gas, aes(x = Exp.Date, y = Last_inflation_adjusted)) +
         plot.margin = margin(5.5, 5.5, 5.5, 5.5, "pt")) + # Adjust plot margins
   annotate("text", x = max(natural_gas$Exp.Date, na.rm = TRUE), 
            y = min(natural_gas$Last_inflation_adjusted, na.rm = TRUE), 
-           label = "Source: barchart.com", 
+           label = "Source: barchart.com/ adjusted by CPI", 
            hjust = 1, vjust = 1, color = "grey50", size = 3.5) # Source annotation at the bottom right, with size 3.5
 
 # To display the plot in R, simply print 'plot' or use it in an RMarkdown chunk.
