@@ -85,22 +85,26 @@ results <- data.frame("total" = total, "pre pandemic" = pre_pandemic)
 results
 
 # plot graph
+
 plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = CFD_Payments_GBP)) +
-  geom_line(color = "#E3120B", size = 1.2) + # Bold red line for payments
-  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + # Dotted black zero line
-  labs(title = "Payments from the low carbon contract company for £65 solar",
+  geom_line(color = "#E3120B", size = 1.2) +  # Bold red line for payments
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) +  # Dotted black zero line
+  labs(title = "Low carbon contract company payments\n fo hypothetical £65 solar strike price",
        x = "Date",
        y = "Adjusted Payments (GBP)") +
-  theme_minimal(base_size = 14) + # Clean minimalistic theme with larger base font size
-  theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 16), # Smaller bold title
-        axis.title.y = element_text(face = "bold", size = 14), # Bold Y axis title
-        axis.text = element_text(color = "black"), # Black axis text for clarity
-        axis.line = element_line(color = "black"), # Black axis lines
-        panel.grid.major = element_line(color = "grey80"), # Lighter grid lines
-        panel.grid.minor = element_blank(), # No minor grid lines
-        panel.background = element_rect(fill = "white", color = NA), # White background, no border
-        plot.margin = margin(5.5, 5.5, 5.5, 5.5, "pt")) + # Adjust plot margins
-  annotate("text", x = max(solar65a$Settlement_Date, na.rm = TRUE), y = min(solar65a$Adjusted_CFD_Payments_GBP, na.rm = TRUE), 
-           label = "Source: LCCC / Adjusted to 2012 CPI", 
-           hjust = 1, vjust = -1, color = "grey50", size = 3.5) # Source annotation at the bottom right
-plot_solar65a`
+  theme_minimal(base_size = 14) +  # Clean minimalistic theme with larger base font size
+  theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 20),  # Smaller bold title
+        axis.title.y = element_text(face = "bold", size = 14),  # Bold Y axis title
+        axis.text = element_text(color = "black"),  # Black axis text for clarity
+        axis.line = element_line(color = "black"),  # Black axis lines
+        panel.grid.major = element_line(color = "grey80"),  # Lighter grid lines
+        panel.grid.minor = element_blank(),  # No minor grid lines
+        panel.background = element_rect(fill = "white", color = NA),  # White background, no border
+        plot.margin = margin(5.5, 5.5, 5.5, 5.5, "pt")) +  # Adjust plot margins
+  annotate("text", x = max(solar65a$Settlement_Date, na.rm = TRUE), 
+           y = min(solar65a$CFD_Payments_GBP, na.rm = TRUE), 
+           label = "Source: LCCC (Charity Farm Round 1)/ Adjusted to 2012 CPI", 
+           hjust = 1, vjust = -1, color = "grey50", size = 3.5)  # Source annotation at the bottom right
+
+# To display the plot
+plot_solar65a
