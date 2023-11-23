@@ -88,7 +88,7 @@ results
 plot_solar65a <- ggplot(solar65a, aes(x = Settlement_Date, y = CFD_Payments_GBP)) +
   geom_line(color = "#E3120B", size = 1.2) + # Bold red line for payments
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) + # Dotted black zero line
-  labs(title = "£65 strike price (AR1 Solar reference)",
+  labs(title = "Payments from the low carbon contract company for £65 solar",
        x = "Date",
        y = "Adjusted Payments (GBP)") +
   theme_minimal(base_size = 14) + # Clean minimalistic theme with larger base font size
